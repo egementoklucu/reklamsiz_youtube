@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="YouTube videolarını ve oynatma listelerini reklamsız, giriş yapmadan izle. Eklediklerin tarayıcının localStorage alanında saklanır." />
+  <meta name="theme-color" content="#0d0d0f" />
+  <meta http-equiv="Content-Security-Policy"
+        content="default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' https://i.ytimg.com https://img.youtube.com data:; frame-src https://www.youtube-nocookie.com https://www.youtube.com; connect-src https://www.youtube.com https://noembed.com; base-uri 'self'; form-action 'self'" />
+  <title>Reklamsız YouTube</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%23ff3b30'/%3E%3Cpath d='M26 20l20 12-20 12z' fill='%23fff'/%3E%3C/svg%3E" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">
+      <span class="brand-icon" aria-hidden="true">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="#fff"><path d="M8 5.5v13l11-6.5z"/></svg>
+      </span>
+      <div>
+        <h1>Reklamsız YouTube</h1>
+        <p>Reklamsız izle • giriş gerekmez • kütüphanen bu tarayıcıda saklanır</p>
+      </div>
+    </div>
+    <div class="chips" aria-label="Özellikler">
+      <span class="chip">🚫 Reklam yok</span>
+      <span class="chip">🔓 Giriş yok</span>
+      <span class="chip">💾 localStorage</span>
+    </div>
+  </header>
+
+  <main>
+    <!-- Link ekleme formu -->
+    <section class="add-card" aria-label="Video veya oynatma listesi ekle">
+      <form id="add-form" novalidate>
+        <label for="url-input">YouTube video veya oynatma listesi linki</label>
+        <div class="add-row">
+          <input id="url-input" type="url" inputmode="url" autocomplete="off" spellcheck="false"
+                 placeholder="https://www.youtube.com/watch?v=…   veya   …/playlist?list=…" />
+          <button type="submit" class="btn-primary">Ekle ve İzle ▶</button>
+        </div>
+        <p class="hint">
+          💡 <kbd>watch?v=</kbd>, <kbd>youtu.be</kbd>, <kbd>shorts</kbd>, <kbd>playlist?list=</kbd>
+          linkleri ve çıplak video ID'si desteklenir. Link kutusuna odaklanmak için <kbd>/</kbd> tuşuna bas.
+        </p>
+      </form>
+      <div id="notice" class="notice" hidden></div>
+    </section>
+
+    <!-- Henüz bir şey oynatılmıyorsa gösterilen karşılama alanı -->
+    <section class="welcome" id="welcome">
+      <div class="welcome-icon" aria-hidden="true">
+        <svg width="34" height="34" viewBox="0 0 24 24" fill="#fff"><path d="M8 5.5v13l11-6.5z"/></svg>
+      </div>
+      <h2>Reklamsız izlemeye başla</h2>
+      <p>
+        Yukarıya bir YouTube video linki veya oynatma listesi linki yapıştır. Hiçbir reklam, hiçbir giriş
+        formu — eklediğin her şey bu tarayıcının <code>localStorage</code> alanına kaydedilir, siteye tekrar
+        girdiğinde tek tıkla kaldığın yerden devam edersin.
+      </p>
+    </section>
+
+    <!-- Reklamsız oynatıcı -->
+    <section class="player-section" id="player-section" hidden aria-label="Oynatıcı">
+      <div class="player-wrap">
+        <iframe id="player" title="Reklamsız YouTube oynatıcı"
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                allowfullscreen referrerpolicy="strict-origin-when-cross-origin"></iframe>
+      </div>
+      <div class="now-playing">
+        <div class="np-info">
+          <span id="np-badge" class="badge badge-video">Video</span>
+          <h2 id="np-title">—</h2>
+          <p id="np-sub"></p>
+        </div>
+        <div class="np-actions">
+          <a id="np-open-yt" href="#" target="_blank" rel="noopener">YouTube'da aç ↗</a>
+          <button id="np-copy" type="button">Linki kopyala</button>
+          <button id="np-remove" type="button" class="danger">Kütüphaneden kaldır</button>
+        </div>
+      </div>
+      <p class="player-note" id="player-note" hidden>
+        📋 Bu bir oynatma listesi — oynatıcı içindeki liste simgesine (☰) tıklayarak listedeki tüm videoları
+        sırayla izleyebilir, istediğin videoya atlayabilirsin.
+      </p>
+    </section>
+
+    <!-- localStorage'da tutulan kütüphane -->
+    <section class="library" aria-label="Kütüphanem">
+      <div class="library-head">
+        <h2>Kütüphanem <span class="count" id="lib-count"></span></h2>
+        <button id="clear-all" type="button" class="danger-link" hidden>Tümünü temizle 🗑</button>
+      </div>
+      <div id="library-grid" class="grid"></div>
+      <div id="library-empty" class="empty">
+        📚 Kütüphanen henüz boş. Yukarıya bir YouTube linki yapıştır — eklediğin tüm videolar ve oynatma
+        listeleri burada birikir, linkleri yeniden yazmana gerek kalmaz.
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <p>
+      <strong>Reklamsız YouTube</strong> — YouTube içeriklerini reklamsız gömülü oynatıcıyla izlemeyi
+      kolaylaştırır. Google hesabı gerekmez; hiçbir veri sunucuya gönderilmez, tüm kütüphane verisi
+      tarayıcının <code>localStorage</code> alanında tutulur.
+    </p>
+    <p>
+      ⚠️ Yaş sınırı olan veya gömmeye izin vermeyen videolar burada açılmayabilir — bu durumda oynatıcı
+      altındaki <em>“YouTube'da aç”</em> bağlantısını kullan. Video başlıkları getirilirken YouTube oEmbed /
+      noembed servisleri kullanılır; bu servislere ulaşılamazsa genel bir başlık gösterilir.
+    </p>
+  </footer>
+
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
+
+  <script src="app.js"></script>
+</body>
+</html>
